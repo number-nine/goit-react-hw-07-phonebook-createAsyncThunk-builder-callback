@@ -8,43 +8,39 @@ const initialState = {
   error: null,
 };
 
-const pendingFn = (state) => {
-      state.isLoading = true;
-      state.error = null;
-    }
+const pendingHandler = state => {
+  state.isLoading = true;
+  state.error = null;
+};
 
-    const rejectedFn = (state, action) => {
+    const rejectedHandler = (state, action) => {
       state.isLoading = false;
       state.error = action.payload;
-    }
+    };
 
 export const contactsSlice = createSlice({
   name: 'contacts',
   initialState,
-  extraReducers: {
-    [contactsAPI.getAllContacts.pending]: pendingFn,
-    [contactsAPI.getAllContacts.fulfilled](state, action) {
+  extraReducers: (builder) => {
+  builder
+    .addCase(contactsAPI.getAllContacts.fulfilled, (state, action) => {
       state.isLoading = false;
       state.items = action.payload;
-    },
-    [contactsAPI.getAllContacts.rejected]: rejectedFn,
-    [contactsAPI.deleteContactById.pending]: pendingFn,
-    [contactsAPI.deleteContactById.fulfilled](state, action) {
+    })
+    .addCase(contactsAPI.deleteContactById.fulfilled, (state, action) => {
       state.isLoading = false;
       const index = state.items.findIndex(
         contact => contact.id === action.payload.id
       );
       state.items.splice(index, 1);
-    },
-    [contactsAPI.deleteContactById.rejected]: rejectedFn,
-    [contactsAPI.addContact.pending]: pendingFn,
-    [contactsAPI.addContact.fulfilled](state, action) {
+    })
+    .addCase(contactsAPI.addContact.fulfilled, (state, action) => {
       state.isLoading = false;
       state.items.push(action.payload);
-    },
-    [contactsAPI.addContact.rejected]: rejectedFn,
+    })
+    .addMatcher(action => action.type.endsWith('pending'), pendingHandler)
+    .addMatcher(action => action.type.endsWith('rejected'), rejectedHandler);
   },
 });
-
 
 export default contactsSlice.reducer;
